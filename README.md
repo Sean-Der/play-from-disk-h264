@@ -2,7 +2,7 @@ This repo demonstrates how you can use Pion WebRTC to play H264 and Ogg from dis
 can be used to pull from other sources.
 
 ### You can use the follow command to create inputs
-* ffmpeg -i $INPUT_FILE -g 30  -preset fast -profile:v baseline -bsf h264_mp4toannexb output.h264
+* ffmpeg -i $INPUT_FILE -an -c:v libx264 -bsf:v h264_mp4toannexb -b:v 2M -max_delay 0 -bf 0 output.h264
 * ffmpeg -i $INPUT_FILE -c:a libopus -page_duration 20000 -vn output.ogg
 
 ### Or pull from my website
