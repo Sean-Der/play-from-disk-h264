@@ -75,6 +75,8 @@ func main() {
 			}
 		}()
 
+		nextVideoSampleTime := time.Now()
+		timePerFrame := time.Millisecond * 33 // 30fps = 1000ms/30frames = 33.3ms
 		go func() {
 			file, h264Err := os.Open(videoFileName)
 			if h264Err != nil {
@@ -99,7 +101,17 @@ func main() {
 					panic(h264Err)
 				}
 
-				time.Sleep(time.Millisecond * 30)
+				// Golang's time.Sleep() is not precise enough for a consistent audio and video stream
+				// (see https://github.com/golang/go/issues/44343). Therefore, don't use an absolute
+				// sleep, but instead calculate the remaining sleep duration using wall clock time.
+				// The packets still will not be perfectly timed, but the error will average out to the point
+				// where the receiver's jitter buffer can compensate.
+				nextVideoSampleTime = nextVideoSampleTime.Add(timePerFrame)
+				sleepDuration := nextVideoSampleTime.Sub(time.Now())
+				if sleepDuration > 0 {
+					time.Sleep(sleepDuration)
+				}
+
 				if h264Err = videoTrack.WriteSample(media.Sample{Data: nal.Data, Duration: time.Second}); h264Err != nil {
 					panic(h264Err)
 				}
@@ -131,8 +143,9 @@ func main() {
 			}
 		}()
 
+		nextAudioSampleTime := time.Now()
 		go func() {
-			// Open a IVF file and start reading using our IVFReader
+			// Open an OGG file and start reading using our OggReader
 			file, oggErr := os.Open(audioFileName)
 			if oggErr != nil {
 				panic(oggErr)
@@ -169,7 +182,12 @@ func main() {
 					panic(oggErr)
 				}
 
-				time.Sleep(sampleDuration)
+				// Same correction system as the video stream
+				nextAudioSampleTime = nextAudioSampleTime.Add(sampleDuration)
+				sleepDuration := nextAudioSampleTime.Sub(time.Now())
+				if sleepDuration > 0 {
+					time.Sleep(sleepDuration)
+				}
 			}
 		}()
 	}
