@@ -1,3 +1,7 @@
+This repo is deprecated, see [play-from-disk-h264](https://github.com/pion/example-webrtc-applications/tree/master/play-from-disk-h264) for a maintained version.
+
+------
+
 This repo demonstrates how you can use Pion WebRTC to play H264 and Ogg from disk. These same APIs
 can be used to pull from other sources.
 
